@@ -266,10 +266,12 @@ export class AIOStreams {
       if (
         this.config.excludeFilters &&
         this.config.excludeFilters.length > 0 &&
-        parsedStream.filename &&
         excludeRegex
       ) {
-        if (excludeRegex.test(parsedStream.filename)) {
+        if (parsedStream.filename && excludeRegex.test(parsedStream.filename)) {
+          return false;
+        }
+        if (parsedStream.indexers && excludeRegex.test(parsedStream.indexers)) {
           return false;
         }
       }
@@ -277,10 +279,12 @@ export class AIOStreams {
       if (
         this.config.strictIncludeFilters &&
         this.config.strictIncludeFilters.length > 0 &&
-        parsedStream.filename &&
         strictIncludeRegex
       ) {
-        if (!strictIncludeRegex.test(parsedStream.filename)) {
+        if (
+          parsedStream.filename &&
+          !strictIncludeRegex.test(parsedStream.filename)
+        ) {
           return false;
         }
       }
@@ -484,7 +488,7 @@ export class AIOStreams {
         ? Settings.ADDON_NAME
         : `🕵️ ${name}`,
       description: this.config.addonNameInDescription
-        ? `🕵️ ${name}\n${description}`
+        ? `🕵️ ${name.split('\n').join(' ')}\n${description}`
         : description,
       subtitles: parsedStream.stream?.subtitles,
       behaviorHints: {
@@ -501,8 +505,9 @@ export class AIOStreams {
     const mediaFlowConfig = getMediaFlowConfig(this.config);
     if (!mediaFlowConfig.mediaFlowEnabled) return false;
     if (!stream.url) return false;
-    // now check if mediaFlowConfig.proxiedAddons or mediaFlowConfig.proxiedServices is not null
-
+    // // now check if mediaFlowConfig.proxiedAddons or mediaFlowConfig.proxiedServices is not null
+    // console.log(this.config.mediaFlowConfig?.proxiedAddons);
+    // console.log(stream.addon.id);
     if (
       mediaFlowConfig.proxiedAddons &&
       mediaFlowConfig.proxiedAddons.length > 0 &&
@@ -887,6 +892,7 @@ export class AIOStreams {
         addon.options.overrideName ||
         addonDetails.find((addonDetail) => addonDetail.id === addon.id)?.name ||
         addon.id;
+      console.log(addon.options);
       const addonId = `${addon.id}-${JSON.stringify(addon.options)}`;
       try {
         const startTime = new Date().getTime();
